@@ -1,0 +1,124 @@
+openapi: 3.0.2
+info:
+  title: Currency Rate API
+  description: API description in Markdown.
+  version: 1.0.0
+servers:
+  - url: 'https://{host}/currency-rate/v1'
+tags:
+  - name: Currency Convertor
+    description: Convert a currency into a target currency
+paths:
+  /convert:
+    get:
+      summary: Convert a given currency into the target currency.
+      description: Uses an external API call to convert a one unit of the given currency into the target currency.
+      tags:
+        - Currency Convertor
+      operationId: "getRate"
+      parameters:
+        - name: from
+          in: query
+          description: The base currency as a standard 3 letter currency code
+          required: true
+          schema:
+            type: string
+          example: EUR
+        - name: to
+          in: query
+          description: The target currency as a standard 3 letter currency code
+          required: true
+          schema:
+            type: string
+          example: USD
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeRate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    ProblemDetails:
+      description: |
+        Describes any error occurred while processing a request.
+      required:
+        - status
+        - detail
+      type: object
+      properties:
+        status:
+          description: "The HTTP status code for the error response"
+          type: integer
+        title:
+          description: "Summary of the problem occurred."
+          type: string
+        detail:
+          description: "Detail explanation of the problem."
+          type: string
+    ExchangeRate:
+      description: |
+        The exchange rate for the target currency based on the from currency.
+      type: object
+      properties:
+        status:
+          type: string
+          description: "Status of the currency convertion."
+          example: "success"
+        timestamp:
+          type: string
+          description: "Time when the conversion happendUTC format YYYY-MM-DDTHH:MM:SS.mmmZ"
+          example: "2023-12-20T12:00:54.798965Z"
+        baseCurrencyCode:
+          type: string
+          description: "Base currency code"
+          example: "EUR"
+        targetCurrencyCode:
+          type: string
+          description: "Target currency code"
+          example: "USD"
+        rate:
+          type: string
+          description: "The exchange rate"
+          example: "1.2564"
+  responses:
+    BadRequest:
+      description: "Bad Request"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          example:
+            status: 400
+            title: "Bad Request"
+            detail: "Invalid currency format"
+
+    NotFound:
+      description: "Not Found"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          example:
+            status: 404
+            title: "Not Found"
+            detail: "Currency code was not found"
+
+    InternalServerError:
+      description: "Internal Server Error"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          example:
+            status: 500
+            title: "Internal Server Error"
+            detail: "Unable to access currency rates."
